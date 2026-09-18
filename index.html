@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes, viewport-fit=cover">
+  <title>通用比价</title>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#3b82f6">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      overscroll-behavior-y: none;
+    }
+
+    body {
+      background: #e8f3ea;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 0.5rem 0.5rem;
+      margin: 0;
+      touch-action: manipulation;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      background: #f8fffa;
+      border-radius: 1.5rem;
+      padding: 0.7rem 0.5rem 0.8rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+      border: 1px solid #c7dfcc;
+    }
+
+    h2 {
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #284534;
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.5px;
+    }
+
+    .columns {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 1.2rem;
+      padding: 0.5rem 0.5rem 0.55rem;
+      border: 1px solid #cfe3d3;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.02);
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .wheel-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .wheel-row {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .wheel-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #456552;
+      min-width: 2.2rem;
+      text-align: right;
+    }
+
+    .price-wheels {
+      display: flex;
+      gap: 0.15rem;
+      flex: 1;
+      align-items: center;
+    }
+
+    .dual-selects {
+      display: flex;
+      gap: 0.25rem;
+      flex: 1;
+    }
+
+    .wheel-wrapper {
+      position: relative;
+      flex: 1;
+      height: 50px;
+      overflow: hidden;
+      border-radius: 20px;
+      background: #f3faf4;
+      border: 1px solid #b8d6be;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .wheel-track {
+      position: absolute;
+      left: 0;
+      right: 0;
+      transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      will-change: transform;
+    }
+
+    .wheel-item {
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #6f8f78;
+      cursor: pointer;
+      transition: color 0.2s, font-size 0.2s;
+    }
+
+    .wheel-item.active {
+      color: #287a45;
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+
+    .wheel-highlight {
+      position: absolute;
+      top: 50%;
+      left: 3px;
+      right: 3px;
+      height: 50px;
+      transform: translateY(-50%);
+      border-top: 1px solid rgba(72, 140, 91, 0.3);
+      border-bottom: 1px solid rgba(72, 140, 91, 0.3);
+      background: rgba(72, 140, 91, 0.04);
+      pointer-events: none;
+      border-radius: 8px;
+    }
+
+    .wheel-separator {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #6f8f78;
+    }
+
+    .select-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    .select-wrapper select {
+      width: 100%;
+      height: 38px;
+      border-radius: 19px;
+      background: #f3faf4;
+      border: 1px solid #b8d6be;
+      padding: 0 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #213b2b;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="%23456552"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 0.5rem center;
+      background-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .select-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #456552;
+      margin: 0 0.05rem;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .results {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #eaf6ec;
+      border-radius: 1.2rem;
+      padding: 0.4rem 0.5rem;
+      margin-top: 0.1rem;
+      gap: 0.2rem;
+    }
+
+    .result-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .result-label {
+      font-size: 0.6rem;
+      color: #63806b;
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
+    }
+
+    .result-value {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #287a45;
+      line-height: 1.2;
+    }
+
+    .result-value small {
+      font-size: 0.6rem;
+      font-weight: 500;
+      color: #6f8f78;
+    }
+
+    .price-highlight {
+      color: #16803c;
+    }
+
+    .best-badge {
+      color: #16803c;
+      font-weight: 700;
+      font-size: 0.65rem;
+      text-align: center;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .reset-btn {
+      width: 100%;
+      margin-top: 0.5rem;
+      background: #d8ecdc;
+      border: none;
+      padding: 0.45rem;
+      border-radius: 2rem;
+      font-weight: 600;
+      color: #294633;
+      font-size: 0.8rem;
+      cursor: pointer;
+      background: #d8ecdc;
+      border: 1px solid #aecfb5;
+    }
+
+    .reset-btn:active {
+      background: #bfdcc5;
+    }
+
+    .label-DannyWu2026 {
+        margin-top: 10px;
+        margin-bottom: -4px;
+        text-align: center;
+        color: #7c9d85;
+        font-size: 0.6rem;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h2>通用比价</h2>
+  <div class="columns" id="productColumns"></div>
+  <button class="reset-btn" id="resetBtn">重置默认</button>
+  <div class="label-DannyWu2026">@DannyWu2026</div>
+</div>
+
+<script>
+  (function() {
+    // 市面上常见包数
+    const packOptions = Array.from({ length: 100 }, (_, i) => i + 1);
+    
+    // 市面上常见份/包（实际份/包）
+    const drawOptions = Array.from({ length: 1000 }, (_, i) => i + 1);
+    
+    const digitOptions = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+    const defaultData = [
+      { total: 20.00, packs: 10, draws: 50 },
+      { total: 50.00, packs: 20, draws: 100 },
+      { total: 80.00, packs: 30, draws: 200 }
+    ];
+
+    let products = JSON.parse(JSON.stringify(defaultData));
+    let wheelInstances = [];
+
+    const container = document.getElementById('productColumns');
+
+    function calc(total, packs, draws) {
+      const t = parseFloat(total);
+      const p = parseInt(packs, 10);
+      const d = parseInt(draws, 10);
+      if (isNaN(t) || isNaN(p) || isNaN(d) || t < 0 || p <= 0 || d <= 0) {
+        return { perPack: null, perHundred: null, valid: false };
+      }
+      const perPack = t / p;
+      // 每一百抽价格 = 每包价格 / (每包份/包 / 100)
+      const perHundred = perPack / (d / 100);
+      return { perPack, perHundred, valid: true };
+    }
+
+    function format(val) {
+      return (val !== null && !isNaN(val)) ? val.toFixed(2) : '—';
+    }
+
+    function findBestIndex() {
+      let bestIdx = -1;
+      let lowest = Infinity;
+      products.forEach((p, i) => {
+        const res = calc(p.total, p.packs, p.draws);
+        if (res.valid && res.perHundred < lowest) {
+          lowest = res.perHundred;
+          bestIdx = i;
+        }
+      });
+      return bestIdx;
+    }
+
+    function splitPrice(price) {
+      let val = parseFloat(price);
+      if (isNaN(val) || val < 0) val = 0;
+      val = Math.min(val, 99.99);
+      const str = val.toFixed(2);
+      const parts = str.split('.');
+      const intPart = parts[0].padStart(2, '0');
+      const decPart = parts[1] || '00';
+      return {
+        tens: parseInt(intPart[0], 10),
+        ones: parseInt(intPart[1], 10),
+        tenths: parseInt(decPart[0], 10),
+        hundredths: parseInt(decPart[1], 10)
+      };
+    }
+
+    function getPriceFromDigits(digits) {
+      return parseFloat(`${digits.tens}${digits.ones}.${digits.tenths}${digits.hundredths}`);
+    }
+
+    function updateAllResults() {
+      const bestIdx = findBestIndex();
+      document.querySelectorAll('.card').forEach((card, i) => {
+        const prod = products[i];
+        const res = calc(prod.total, prod.packs, prod.draws);
+        const perPack = format(res.perPack);
+        const perHundred = format(res.perHundred);
+        const isBest = (i === bestIdx && res.valid);
+        
+        const resultValues = card.querySelectorAll('.result-value');
+        if (resultValues.length >= 2) {
+          resultValues[0].innerHTML = `${perPack}<small>元</small>`;
+          resultValues[1].innerHTML = `${perHundred}<small>元</small>`;
+        }
+        
+        const bestBadge = card.querySelector('.best-badge');
+        if (bestBadge) {
+          bestBadge.style.display = isBest ? 'block' : 'none';
+        }
+      });
+    }
+
+    class WheelScroller {
+      constructor(container, options, initialValue, onChange, isDigit = false) {
+        this.container = container;
+        this.options = options;
+        this.currentValue = initialValue;
+        this.onChange = onChange;
+        this.isDigit = isDigit;
+        this.itemHeight = 50;
+        this.currentIndex = options.indexOf(initialValue);
+        if (this.currentIndex === -1) this.currentIndex = 0;
+        
+        this.track = null;
+        this.isDragging = false;
+        this.startY = 0;
+        this.startScrollTop = 0;
+        this.wheelTimeout = null;
+        
+        this.init();
+      }
+
+      init() {
+        this.container.innerHTML = '';
+        this.container.style.position = 'relative';
+        
+        const highlight = document.createElement('div');
+        highlight.className = 'wheel-highlight';
+        this.container.appendChild(highlight);
+        
+        this.track = document.createElement('div');
+        this.track.className = 'wheel-track';
+        this.container.appendChild(this.track);
+        
+        this.options.forEach((opt, i) => {
+          const item = document.createElement('div');
+          item.className = 'wheel-item';
+          if (this.isDigit) {
+            item.textContent = opt;
+          } else {
+            item.textContent = opt;
+          }
+          item.dataset.value = opt;
+          item.dataset.index = i;
+          this.track.appendChild(item);
+        });
+        
+        this.setPosition(this.currentIndex, false);
+        
+        // 触摸事件
+        this.container.addEventListener('touchstart', this.onTouchStart.bind(this), { passive: false });
+        this.container.addEventListener('touchmove', this.onTouchMove.bind(this), { passive: false });
+        this.container.addEventListener('touchend', this.onTouchEnd.bind(this));
+        
+        // 鼠标拖拽事件
+        this.container.addEventListener('mousedown', this.onMouseDown.bind(this));
+        
+        // 鼠标滚轮事件
+        this.container.addEventListener('wheel', this.onWheel.bind(this), { passive: false });
+        
+        // 点击选择
+        this.track.addEventListener('click', (e) => {
+          const item = e.target.closest('.wheel-item');
+          if (item) {
+            const index = parseInt(item.dataset.index);
+            this.selectIndex(index);
+          }
+        });
+      }
+
+      onWheel(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const delta = e.deltaY > 0 ? 1 : -1;
+        let newIndex = this.currentIndex + delta;
+        newIndex = Math.max(0, Math.min(this.options.length - 1, newIndex));
+        
+        if (newIndex !== this.currentIndex) {
+          this.selectIndex(newIndex);
+        }
+      }
+
+      onTouchStart(e) {
+        e.preventDefault();
+        this.isDragging = true;
+        this.startY = e.touches[0].clientY;
+        this.startScrollTop = this.currentIndex * this.itemHeight;
+        this.track.style.transition = 'none';
+      }
+
+      onTouchMove(e) {
+        if (!this.isDragging) return;
+        e.preventDefault();
+        const deltaY = this.startY - e.touches[0].clientY;
+        const newScrollTop = this.startScrollTop + deltaY;
+        const maxScroll = (this.options.length - 1) * this.itemHeight;
+        const clampedScroll = Math.max(0, Math.min(maxScroll, newScrollTop));
+        this.track.style.transform = `translateY(${-clampedScroll}px)`;
+        
+        const currentIndex = Math.round(clampedScroll / this.itemHeight);
+        this.currentIndex = Math.max(0, Math.min(this.options.length - 1, currentIndex));
+        this.updateActiveClass();
+      }
+
+      onTouchEnd(e) {
+        if (!this.isDragging) return;
+        this.isDragging = false;
+        this.snapToNearest();
+      }
+
+      onMouseDown(e) {
+        e.preventDefault();
+        this.isDragging = true;
+        this.startY = e.clientY;
+        this.startScrollTop = this.currentIndex * this.itemHeight;
+        this.track.style.transition = 'none';
+        
+        const onMouseMove = (e) => {
+          if (!this.isDragging) return;
+          e.preventDefault();
+          const deltaY = this.startY - e.clientY;
+          const newScrollTop = this.startScrollTop + deltaY;
+          const maxScroll = (this.options.length - 1) * this.itemHeight;
+          const clampedScroll = Math.max(0, Math.min(maxScroll, newScrollTop));
+          this.track.style.transform = `translateY(${-clampedScroll}px)`;
+          
+          const currentIndex = Math.round(clampedScroll / this.itemHeight);
+          this.currentIndex = Math.max(0, Math.min(this.options.length - 1, currentIndex));
+          this.updateActiveClass();
+        };
+        
+        const onMouseUp = () => {
+          this.isDragging = false;
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+          this.snapToNearest();
+        };
+        
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      }
+
+      snapToNearest() {
+        this.currentIndex = Math.max(0, Math.min(this.options.length - 1, this.currentIndex));
+        this.setPosition(this.currentIndex, true);
+        
+        const newValue = this.options[this.currentIndex];
+        if (newValue !== this.currentValue) {
+          this.currentValue = newValue;
+          if (this.onChange) this.onChange(newValue);
+        }
+      }
+
+      selectIndex(index) {
+        this.currentIndex = index;
+        this.setPosition(index, true);
+        const newValue = this.options[index];
+        if (newValue !== this.currentValue) {
+          this.currentValue = newValue;
+          if (this.onChange) this.onChange(newValue);
+        }
+      }
+
+      setPosition(index, animate = true) {
+        this.currentIndex = index;
+        this.track.style.transition = animate ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none';
+        this.track.style.transform = `translateY(${-index * this.itemHeight}px)`;
+        this.updateActiveClass();
+      }
+
+      updateActiveClass() {
+        const items = this.track.querySelectorAll('.wheel-item');
+        items.forEach((item, i) => {
+          if (i === this.currentIndex) {
+            item.classList.add('active');
+          } else {
+            item.classList.remove('active');
+          }
+        });
+      }
+
+      setValue(value) {
+        const index = this.options.indexOf(value);
+        if (index !== -1) {
+          this.currentValue = value;
+          this.setPosition(index, false);
+        }
+      }
+
+      destroy() {
+        this.container.innerHTML = '';
+      }
+    }
+
+    function renderSelectOptions(options, selectedValue, isDraw = false) {
+      return options.map(opt => {
+        const display = opt.toString();
+        const selected = (parseInt(selectedValue) === opt) ? 'selected' : '';
+        return `<option value="${opt}" ${selected}>${display}</option>`;
+      }).join('');
+    }
+
+    function render() {
+      wheelInstances.forEach(w => w.destroy?.());
+      wheelInstances = [];
+      
+      const bestIdx = findBestIndex();
+      let html = '';
+      
+      products.forEach((prod, idx) => {
+        const res = calc(prod.total, prod.packs, prod.draws);
+        const perPack = format(res.perPack);
+        const perHundred = format(res.perHundred);
+        const isBest = (idx === bestIdx && res.valid);
+        
+        html += `
+          <div class="card" data-index="${idx}">
+            <div class="wheel-group">
+              <div class="wheel-row">
+                <span class="wheel-label">总价</span>
+                <div class="price-wheels">
+                  <div class="wheel-wrapper" id="wheel-tens-${idx}"></div>
+                  <div class="wheel-wrapper" id="wheel-ones-${idx}"></div>
+                  <span class="wheel-separator">.</span>
+                  <div class="wheel-wrapper" id="wheel-tenths-${idx}"></div>
+                  <div class="wheel-wrapper" id="wheel-hundredths-${idx}"></div>
+                </div>
+              </div>
+              <div class="wheel-row">
+                <span class="wheel-label">包数</span>
+                <div class="dual-selects">
+                  <div class="select-wrapper">
+                    <select id="select-packs-${idx}">
+                      ${renderSelectOptions(packOptions, prod.packs)}
+                    </select>
+                  </div>
+                  <span class="select-label">份/包</span>
+                  <div class="select-wrapper">
+                    <select id="select-draws-${idx}">
+                      ${renderSelectOptions(drawOptions, prod.draws, true)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="results">
+              <div class="result-item">
+                <span class="result-label">每包</span>
+                <span class="result-value">${perPack}<small>元</small></span>
+              </div>
+              <div class="best-badge" style="display: ${isBest ? 'block' : 'none'};font-size: 1rem;">最划算哟♥♥</div>
+              <div class="result-item">
+                <span class="result-label">每百份</span>
+                <span class="result-value price-highlight">${perHundred}<small>元</small></span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+      
+      // 绑定下拉事件
+      products.forEach((prod, idx) => {
+        const packsSelect = document.getElementById(`select-packs-${idx}`);
+        const drawsSelect = document.getElementById(`select-draws-${idx}`);
+        
+        if (packsSelect) {
+          packsSelect.addEventListener('change', function() {
+            products[idx].packs = parseInt(this.value);
+            updateAllResults();
+          });
+        }
+        
+        if (drawsSelect) {
+          drawsSelect.addEventListener('change', function() {
+            products[idx].draws = parseInt(this.value);
+            updateAllResults();
+          });
+        }
+        
+        // 初始化滚轮
+        const priceDigits = splitPrice(prod.total);
+        
+        const createWheel = (containerId, options, initialValue, onChange, isDigit = false) => {
+          const wheelContainer = document.getElementById(containerId);
+          if (!wheelContainer) return;
+          const wheel = new WheelScroller(wheelContainer, options, initialValue, onChange, isDigit);
+          wheelInstances.push(wheel);
+          return wheel;
+        };
+        
+        createWheel(`wheel-tens-${idx}`, digitOptions, priceDigits.tens, (val) => {
+          const digits = splitPrice(products[idx].total);
+          digits.tens = val;
+          products[idx].total = getPriceFromDigits(digits);
+          updateAllResults();
+        }, true);
+        
+        createWheel(`wheel-ones-${idx}`, digitOptions, priceDigits.ones, (val) => {
+          const digits = splitPrice(products[idx].total);
+          digits.ones = val;
+          products[idx].total = getPriceFromDigits(digits);
+          updateAllResults();
+        }, true);
+        
+        createWheel(`wheel-tenths-${idx}`, digitOptions, priceDigits.tenths, (val) => {
+          const digits = splitPrice(products[idx].total);
+          digits.tenths = val;
+          products[idx].total = getPriceFromDigits(digits);
+          updateAllResults();
+        }, true);
+        
+        createWheel(`wheel-hundredths-${idx}`, digitOptions, priceDigits.hundredths, (val) => {
+          const digits = splitPrice(products[idx].total);
+          digits.hundredths = val;
+          products[idx].total = getPriceFromDigits(digits);
+          updateAllResults();
+        }, true);
+      });
+    }
+
+    document.getElementById('resetBtn').addEventListener('click', function() {
+      products = JSON.parse(JSON.stringify(defaultData));
+      render();
+    });
+
+    render();
+  })();
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(() => console.log('SW 注册成功'))
+        .catch((err) => console.error('SW 注册失败', err));
+    });
+  }
+</script>
+</body>
+</html>
